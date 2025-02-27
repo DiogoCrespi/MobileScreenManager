@@ -1,6 +1,7 @@
 package com.mobilescreenmanager.services
 
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
@@ -11,12 +12,17 @@ import com.mobilescreenmanager.ui.RotationActivity
 
 class ScreenOrientationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        val displayContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            applicationContext.createDisplayContext(display!!)
+        } else {
+            applicationContext
+        }
+
         val rotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            display?.rotation ?: Surface.ROTATION_0
+            displayContext.display?.rotation ?: Surface.ROTATION_0
         } else {
             @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.rotation
+            (getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
         }
 
         val newRotation = when (rotation) {

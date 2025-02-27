@@ -1,4 +1,4 @@
-package com.example.mobilescreenmanager.ui.home
+package com.mobilescreenmanager.ui.home
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
