@@ -15,8 +15,8 @@ class SettingsActivity : AppCompatActivity() {
 
         preferencesManager = PreferencesManager(this)
 
-        val switchRotation = findViewById<Switch>(R.id.switchRotation)
-        val switchFullscreen = findViewById<Switch>(R.id.switchFullscreen)
+        val switchRotation: Switch = findViewById(R.id.switchRotation)
+        val switchFullscreen: Switch = findViewById(R.id.switchFullscreen)
 
         switchRotation.isChecked = preferencesManager.isRotationEnabled()
         switchFullscreen.isChecked = preferencesManager.isFullscreenEnabled()

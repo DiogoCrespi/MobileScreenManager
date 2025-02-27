@@ -2,25 +2,39 @@ package com.mobilescreenmanager.services
 
 import android.app.Service
 import android.content.Intent
-import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.IBinder
+import android.view.Display
+import android.view.Surface
 import android.view.WindowManager
-import android.widget.Toast
+import com.mobilescreenmanager.ui.RotationActivity
 
 class ScreenOrientationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-        )
-
-        try {
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
-        } catch (e: Exception) {
-            Toast.makeText(this, "Erro ao definir a rotação!", Toast.LENGTH_SHORT).show()
+        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        val rotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            display?.rotation ?: Surface.ROTATION_0
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.rotation
         }
 
+        val newRotation = when (rotation) {
+            Surface.ROTATION_0 -> Surface.ROTATION_90
+            Surface.ROTATION_90 -> Surface.ROTATION_0
+            else -> Surface.ROTATION_0
+        }
+
+        forceRotation(newRotation)
         return START_STICKY
+    }
+
+    private fun forceRotation(rotation: Int) {
+        val newIntent = Intent(this, RotationActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            putExtra("ROTATION", rotation)
+        }
+        startActivity(newIntent)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mobilescreenmanager"
+    namespace = "com.mobilescreenmanager" // Alterado para refletir o pacote correto
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.mobilescreenmanager"
+        applicationId = "com.mobilescreenmanager"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

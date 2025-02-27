@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import com.mobilescreenmanager.R
 
 class OverlayPermissionService : Service() {
     private lateinit var windowManager: WindowManager
@@ -30,7 +31,7 @@ class OverlayPermissionService : Service() {
             y = 10
         }
 
-        overlayView.findViewById<Button>(R.id.toggleButton).setOnClickListener {
+        overlayView.findViewById<Button>(R.id.toggleButton)?.setOnClickListener {
             stopSelf()
         }
 
