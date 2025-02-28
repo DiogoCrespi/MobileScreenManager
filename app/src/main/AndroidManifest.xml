@@ -27,7 +27,7 @@
         </activity>
 
         <service
-            android:name="com.example.mobilescreenmanager.services.FullscreenService"
+            android:name="com.mobilescreenmanager.services.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"/>
 
@@ -50,6 +50,11 @@
             android:name=".services.ScreenOrientationService"
             android:exported="false"
             android:foregroundServiceType="specialUse"/>
+
+        <service
+            android:name=".services.FullscreenService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection"/>
 
         <receiver android:name=".services.StopServiceReceiver"
             android:exported="false"/>

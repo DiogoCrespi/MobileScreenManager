@@ -2,6 +2,8 @@ package com.mobilescreenmanager
 
 import android.Manifest
 import android.app.AlertDialog
+import android.app.ActivityManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -32,20 +34,14 @@ class MainActivity : AppCompatActivity() {
         requestPermissions()
 
         btnStartRotation.setOnClickListener {
-            try {
-                startService(Intent(this, ScreenOrientationService::class.java))
-                showAlert("Rotação de tela ativada com sucesso!")
-            } catch (e: Exception) {
-                showAlert("Erro ao ativar rotação de tela: ${e.message}")
-            }
+            startScreenService(ScreenOrientationService::class.java, "Rotação de tela ativada com sucesso!")
         }
 
         btnStartFullscreen.setOnClickListener {
-            try {
-                startService(Intent(this, FullscreenService::class.java))
-                showAlert("Modo tela cheia ativado!")
-            } catch (e: Exception) {
-                showAlert("Erro ao ativar modo tela cheia: ${e.message}")
+            if (!Settings.canDrawOverlays(this)) {
+                requestOverlayPermission()
+            } else {
+                startScreenService(FullscreenService::class.java, "Modo tela cheia ativado!")
             }
         }
 
@@ -58,22 +54,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnStartScreenManager.setOnClickListener {
-            try {
-                startService(Intent(this, ScreenManagerService::class.java))
-                showAlert("Gerenciamento de tela iniciado!")
-            } catch (e: Exception) {
-                showAlert("Erro ao iniciar gerenciamento de tela: ${e.message}")
+            if (!Settings.canDrawOverlays(this)) {
+                requestOverlayPermission()
+            } else {
+                startScreenService(ScreenManagerService::class.java, "Gerenciamento de tela iniciado!")
             }
         }
     }
 
     private fun requestPermissions() {
         try {
-            // Permissão para sobrepor tela
+            // Permissão para sobreposição de tela
             if (!Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "Permissão de sobreposição necessária!", Toast.LENGTH_LONG).show()
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-                startActivity(intent)
+                requestOverlayPermission()
             }
 
             // Permissão para notificações (Android 13+)
@@ -89,6 +82,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun requestOverlayPermission() {
+        Toast.makeText(this, "Permissão de sobreposição necessária!", Toast.LENGTH_LONG).show()
+        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+        startActivityForResult(intent, REQUEST_CODE_OVERLAY)
+    }
+
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (!isGranted) {
@@ -100,9 +99,7 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Permissão necessária")
             .setMessage("O aplicativo precisa da permissão de notificações para funcionar corretamente. Deseja conceder agora?")
-            .setPositiveButton("Sim") { _, _ ->
-                openAppSettings()
-            }
+            .setPositiveButton("Sim") { _, _ -> openAppSettings() }
             .setNegativeButton("Cancelar") { dialog, _ -> dialog.dismiss() }
             .show()
     }
@@ -119,5 +116,32 @@ class MainActivity : AppCompatActivity() {
             .setMessage(message)
             .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
             .show()
+    }
+
+    private fun <T> startScreenService(serviceClass: Class<T>, successMessage: String) {
+        try {
+            if (!isServiceRunning(serviceClass)) {
+                startService(Intent(this, serviceClass))
+                showAlert(successMessage)
+            } else {
+                showAlert("O serviço já está em execução!")
+            }
+        } catch (e: Exception) {
+            showAlert("Erro ao iniciar serviço: ${e.message}")
+        }
+    }
+
+    private fun <T> isServiceRunning(serviceClass: Class<T>): Boolean {
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name == service.service.className) {
+                return true
+            }
+        }
+        return false
+    }
+
+    companion object {
+        private const val REQUEST_CODE_OVERLAY = 1001
     }
 }
