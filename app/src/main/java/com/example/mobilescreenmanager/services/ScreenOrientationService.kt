@@ -1,23 +1,44 @@
 package com.mobilescreenmanager.services
 
 import android.app.*
+import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.graphics.PixelFormat
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
-import com.mobilescreenmanager.services.FullscreenService
 import com.mobilescreenmanager.R
 
-class ScreenOrientationService : Service() {
+class ScreenOrientationService : Service(), SensorEventListener {
 
+    private lateinit var sensorManager: SensorManager
+    private var rotationSensor: Sensor? = null
+    private var lastOrientation: Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     private var isRotationActive = false
     private var isFullscreenActive = false
     private var overlayView: View? = null
     private lateinit var windowManager: WindowManager
+
+    override fun onCreate() {
+        super.onCreate()
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+
+        rotationSensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        }
+
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -50,17 +71,18 @@ class ScreenOrientationService : Service() {
 
     private fun updateModes() {
         showNotification()
-        addOverlay()
+        if (isFullscreenActive) {
+            addOverlay()
+        } else {
+            removeOverlay()
+        }
     }
 
     private fun addOverlay() {
         if (overlayView != null) return
 
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-
         overlayView = View(this).apply {
             setBackgroundColor(0x00000000) // Transparente
-            setOnTouchListener { _, _ -> false } // Permite passar o toque para o sistema
         }
 
         val layoutParams = WindowManager.LayoutParams(
@@ -69,11 +91,11 @@ class ScreenOrientationService : Service() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or // Agora os toques passam pela sobreposição
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, // Mantém a sobreposição ativa
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
             PixelFormat.TRANSLUCENT
         )
 
@@ -82,8 +104,6 @@ class ScreenOrientationService : Service() {
         windowManager.addView(overlayView, layoutParams)
     }
 
-
-
     private fun removeOverlay() {
         overlayView?.let {
             windowManager.removeView(it)
@@ -91,6 +111,11 @@ class ScreenOrientationService : Service() {
         }
     }
 
+    private fun applyScreenOrientation(orientation: Int) {
+        val intent = Intent("com.mobilescreenmanager.ORIENTATION_CHANGED")
+        intent.putExtra("screen_orientation", orientation)
+        sendBroadcast(intent)
+    }
 
     private fun showNotification() {
         val channelId = "screen_manager_channel"
@@ -100,6 +125,7 @@ class ScreenOrientationService : Service() {
             val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
             getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
         }
+
 
         val rotationIntent = Intent(this, ScreenOrientationService::class.java).apply { action = "TOGGLE_ROTATION" }
         val rotationPendingIntent = PendingIntent.getService(this, 0, rotationIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -132,10 +158,43 @@ class ScreenOrientationService : Service() {
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.notify(1, notification)
 
-        startForeground(1, notification) // Corrigido: Garante que a notificação sempre aparece
+        startForeground(1, notification) // Garante que a notificação sempre aparece
     }
 
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (!isRotationActive) return
+
+        event?.let {
+            val rotationMatrix = FloatArray(9)
+            val orientationValues = FloatArray(3)
+
+            SensorManager.getRotationMatrixFromVector(rotationMatrix, it.values)
+            SensorManager.getOrientation(rotationMatrix, orientationValues)
+
+            val pitch = Math.toDegrees(orientationValues[1].toDouble()).toFloat()
+            val roll = Math.toDegrees(orientationValues[2].toDouble()).toFloat()
+
+            val newOrientation = when {
+                pitch > 45 -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT
+                pitch < -45 -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                roll > 45 -> ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                roll < -45 -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+
+            if (newOrientation != lastOrientation) {
+                lastOrientation = newOrientation
+                Log.d("ScreenOrientationService", "Aplicando nova orientação: $newOrientation")
+                applyScreenOrientation(newOrientation)
+            }
+        }
+    }
+
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
     override fun onDestroy() {
+        sensorManager.unregisterListener(this)
         removeOverlay()
         super.onDestroy()
     }

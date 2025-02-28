@@ -59,5 +59,16 @@
         <receiver android:name=".services.StopServiceReceiver"
             android:exported="false"/>
 
+        <receiver
+            android:name=".services.ScreenOrientationReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.mobilescreenmanager.ORIENTATION_CHANGED"/>
+            </intent-filter>
+        </receiver>
+
+
+
+
     </application>
 </manifest>
