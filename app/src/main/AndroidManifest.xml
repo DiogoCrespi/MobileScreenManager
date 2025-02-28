@@ -4,15 +4,19 @@
     <!-- Permissões necessárias -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
+
 
     <application
         android:allowBackup="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.MobileScreenManager">
 
-        <!-- Definição da MainActivity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -22,23 +26,33 @@
             </intent-filter>
         </activity>
 
-        <!-- Serviço de Tela Cheia -->
         <service
             android:name=".services.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"/>
 
-        <!-- Serviço de Rotação de Tela -->
         <service
             android:name=".services.ScreenOrientationService"
             android:exported="false"
             android:foregroundServiceType="specialUse"/>
 
-        <!-- Activity auxiliar para rotação -->
-        <activity
-            android:name=".ui.RotationActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:launchMode="singleTask"/>
+        <service
+            android:name=".services.ScreenManagerService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"/>
+
+        <service
+            android:name=".services.ScreenOrientationService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"/>
+
+        <service
+            android:name=".services.ScreenOrientationService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"/>
+
+        <receiver android:name=".services.StopServiceReceiver"
+            android:exported="false"/>
 
     </application>
 </manifest>

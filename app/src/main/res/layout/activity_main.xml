@@ -21,6 +21,13 @@
             android:layout_height="wrap_content" />
 
         <!-- Botões de controle -->
+
+        <Button
+            android:id="@+id/btnStartRotation"
+            android:layout_width="match_parent"
+            android:layout_height="79dp"
+            android:text="Iniciar Rotação" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -29,16 +36,17 @@
             android:gravity="center_horizontal">
 
             <Button
-                android:id="@+id/btnStartRotation"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Iniciar Rotação" />
-
-            <Button
                 android:id="@+id/btnStartFullscreen"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Ativar Tela Cheia"
+                android:layout_marginTop="8dp"/>
+
+            <Button
+                android:id="@+id/btnStartScreenManager"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Iniciar Gerenciamento da Tela"
                 android:layout_marginTop="8dp"/>
 
             <Button
