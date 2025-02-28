@@ -1,16 +1,15 @@
 package com.mobilescreenmanager.services
 
 import android.app.*
-import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
 import android.view.Gravity
-import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
+import com.mobilescreenmanager.services.FullscreenService
 import com.mobilescreenmanager.R
 
 class ScreenOrientationService : Service() {
@@ -28,6 +27,11 @@ class ScreenOrientationService : Service() {
             }
             "TOGGLE_FULLSCREEN" -> {
                 isFullscreenActive = !isFullscreenActive
+                if (isFullscreenActive) {
+                    startService(Intent(this, FullscreenService::class.java))
+                } else {
+                    stopService(Intent(this, FullscreenService::class.java))
+                }
                 updateModes()
             }
             "TOGGLE_BOTH" -> {

@@ -27,7 +27,7 @@
         </activity>
 
         <service
-            android:name=".services.FullscreenService"
+            android:name="com.example.mobilescreenmanager.services.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"/>
 

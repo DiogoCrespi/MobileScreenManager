@@ -1,5 +1,6 @@
 package com.mobilescreenmanager.services
 
+
 import android.app.Service
 import android.content.Intent
 import android.graphics.PixelFormat
