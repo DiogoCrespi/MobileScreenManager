@@ -36,18 +36,10 @@ class FullscreenService : Service() {
 
                 if (event.action == MotionEvent.ACTION_DOWN) {
                     Log.d("FullscreenService", "Toque detectado, verificando status da tela cheia")
-                    if (!isFullscreenActive) {
-                        isFullscreenActive = true
-                        applyFullscreenMode(this)
-                    }
+                    applyFullscreenMode(this)
                 }
-                false // Permite que os toques passem para os apps abaixo
-            }
 
-            setOnApplyWindowInsetsListener { _, insets ->
-                Log.d("FullscreenService", "Interceptando insets, reativando tela cheia")
-                applyFullscreenMode(this)
-                insets
+                false // Permite que os toques passem para os apps abaixo
             }
         }
 
@@ -60,7 +52,7 @@ class FullscreenService : Service() {
                 WindowManager.LayoutParams.TYPE_PHONE,
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or // Permite que os toques passem
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or // Permite eventos de toque passarem
                     WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
             PixelFormat.TRANSLUCENT
         )
@@ -86,19 +78,28 @@ class FullscreenService : Service() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             view.post {
-                val controller = view.windowInsetsController
-                if (controller != null) {
-                    controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-
-                    // Permite exibir a barra de status ao deslizar, mas mantém a interação na tela toda
-                    controller.systemBarsBehavior =
-                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-
-                    Log.d("FullscreenService", "Modo tela cheia ativado e interativo")
-                } else {
-                    Log.e("FullscreenService", "WindowInsetsController é nulo, falha ao ocultar status bars")
+                try {
+                    val controller = view.windowInsetsController
+                    if (controller != null) {
+                        controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                        controller.systemBarsBehavior =
+                            WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                        Log.d("FullscreenService", "Modo tela cheia ativado")
+                    } else {
+                        Log.e("FullscreenService", "WindowInsetsController é nulo")
+                    }
+                } catch (e: Exception) {
+                    Log.e("FullscreenService", "Erro ao ativar tela cheia: ${e.message}")
                 }
             }
+        } else {
+            @Suppress("DEPRECATION")
+            view.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_FULLSCREEN or
+                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    )
+            Log.d("FullscreenService", "Modo tela cheia ativado via systemUiVisibility")
         }
     }
 
