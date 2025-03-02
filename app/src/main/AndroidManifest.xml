@@ -55,6 +55,19 @@
             android:name=".services.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"/>
+        <service
+            android:name=".services.FullscreenService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+
+        <receiver
+            android:name=".receivers.FullscreenReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.SCREEN_ON"/>
+            </intent-filter>
+        </receiver>
 
         <receiver android:name=".services.StopServiceReceiver"
             android:exported="false"/>
