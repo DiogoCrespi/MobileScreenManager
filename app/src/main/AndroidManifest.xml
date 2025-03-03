@@ -27,7 +27,7 @@
         </activity>
 
         <service
-            android:name="com.mobilescreenmanager.services.FullscreenService"
+            android:name="com.mobilescreenmanager.services.Fullscreen.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"/>
 
@@ -52,16 +52,16 @@
             android:foregroundServiceType="specialUse"/>
 
         <service
-            android:name=".services.FullscreenService"
+            android:name=".services.Fullscreen.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"/>
         <service
-            android:name=".services.FullscreenService"
+            android:name=".services.Fullscreen.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
 
         <receiver
-            android:name=".receivers.FullscreenReceiver"
+            android:name=".services.Fullscreen.FullscreenReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
