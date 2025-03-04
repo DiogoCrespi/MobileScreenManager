@@ -61,7 +61,7 @@
             android:foregroundServiceType="mediaProjection" />
 
         <receiver
-            android:name=".services.Fullscreen.FullscreenReceiver"
+            android:name=".services.FullscreenReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
