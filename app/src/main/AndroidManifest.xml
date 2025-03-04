@@ -27,7 +27,7 @@
         </activity>
 
         <service
-            android:name="com.mobilescreenmanager.services.Fullscreen.FullscreenService"
+            android:name="com.mobilescreenmanager.services.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"/>
 
@@ -52,13 +52,21 @@
             android:foregroundServiceType="specialUse"/>
 
         <service
-            android:name=".services.Fullscreen.FullscreenService"
+            android:name=".services.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"/>
         <service
-            android:name=".services.Fullscreen.FullscreenService"
+            android:name=".services.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
+
+        <service
+            android:name=".services.OverlayAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true"
+            android:label="@string/accessibility_service_label"
+            android:enabled="true"
+            android:accessibilityServiceInfo="@xml/accessibility_service_config" />
 
         <receiver
             android:name=".services.FullscreenReceiver"
