@@ -64,9 +64,20 @@
             android:name=".services.OverlayAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true"
-            android:label="@string/accessibility_service_label"
             android:enabled="true"
-            android:accessibilityServiceInfo="@xml/accessibility_service_config" />
+            android:label="@string/accessibility_service_label">
+
+            <!-- Identifica que este serviço é de Acessibilidade. -->
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <!-- Referência para o XML de configuração do serviço -->
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
 
         <receiver
             android:name=".services.FullscreenReceiver"

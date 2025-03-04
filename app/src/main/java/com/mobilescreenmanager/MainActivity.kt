@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+
+
         btnSettings.setOnClickListener {
             Log.d("MainActivity", "Botão Configurações clicado")
             try {
