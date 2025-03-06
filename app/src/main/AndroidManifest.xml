@@ -1,15 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mobilescreenmanager">
 
-    <!-- Permissões necessárias -->
+    <!-- 📌 Permissões necessárias -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-
 
 
     <application
@@ -17,6 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MobileScreenManager">
 
+        <!-- 📌 Atividade Principal -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -26,8 +24,9 @@
             </intent-filter>
         </activity>
 
+        <!-- 📌 Serviços (Removendo duplicações e organizando corretamente) -->
         <service
-            android:name="com.mobilescreenmanager.services.FullscreenService"
+            android:name=".services.FullscreenService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection"/>
 
@@ -42,43 +41,20 @@
             android:foregroundServiceType="specialUse"/>
 
         <service
-            android:name=".services.ScreenOrientationService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse"/>
-
-        <service
-            android:name=".services.ScreenOrientationService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse"/>
-
-        <service
-            android:name=".services.FullscreenService"
-            android:exported="false"
-            android:foregroundServiceType="mediaProjection"/>
-        <service
-            android:name=".services.FullscreenService"
-            android:exported="false"
-            android:foregroundServiceType="mediaProjection" />
-
-        <service
             android:name=".services.OverlayAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true"
             android:enabled="true"
             android:label="@string/accessibility_service_label">
-
-            <!-- Identifica que este serviço é de Acessibilidade. -->
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
-
-            <!-- Referência para o XML de configuração do serviço -->
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
-
+        <!-- 📌 Broadcast Receivers -->
         <receiver
             android:name=".services.FullscreenReceiver"
             android:enabled="true"
@@ -88,7 +64,8 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".services.StopServiceReceiver"
+        <receiver
+            android:name=".services.StopServiceReceiver"
             android:exported="false"/>
 
         <receiver
@@ -99,8 +76,6 @@
             </intent-filter>
         </receiver>
 
-
-
-
     </application>
+
 </manifest>

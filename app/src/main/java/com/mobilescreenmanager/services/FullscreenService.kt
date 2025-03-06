@@ -1,51 +1,59 @@
 package com.mobilescreenmanager.services
 
-import android.app.Service
+import android.app.*
+import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
-import android.os.*
+import android.os.Build
+import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
 import android.view.*
+import androidx.core.app.NotificationCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.mobilescreenmanager.R
 
 class FullscreenService : Service() {
+
     private lateinit var windowManager: WindowManager
     private var overlayView: View? = null
-    private var isFullscreenActive = true
+    private val TAG = "FullscreenService"
+
+    override fun onCreate() {
+        super.onCreate()
+        startForeground(1001, createNotification())
+
+        if (checkOverlayPermission()) {
+            startFullscreenMode()
+        } else {
+            Log.e(TAG, "Permissão SYSTEM_ALERT_WINDOW não concedida")
+            stopSelf()
+        }
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("FullscreenService", "Iniciando serviço de Tela Cheia no Android ${Build.VERSION.SDK_INT}")
+        return START_STICKY
+    }
 
-        if (!Settings.canDrawOverlays(this)) {
-            Log.e("FullscreenService", "Permissão de sobreposição não concedida.")
-            stopSelf()
-            return START_NOT_STICKY
+    private fun checkOverlayPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Settings.canDrawOverlays(this)
+        } else {
+            true
         }
+    }
 
-        if (overlayView != null) {
-            Log.d("FullscreenService", "Overlay já existe, ignorando nova criação")
-            return START_STICKY
-        }
-
+    private fun startFullscreenMode() {
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
         overlayView = View(this).apply {
-            setBackgroundColor(0x55000000) // Transparente
+            setBackgroundColor(0x00000000) // Totalmente transparente
+
             setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
-                    Log.d("FullscreenService", "Toque detectado, mantendo tela cheia")
-                    if (!isFullscreenActive) {
-                        isFullscreenActive = true
-                        applyFullscreenMode(this)
-                    }
+                    sendTouchBroadcast(event.rawX, event.rawY)
                 }
-                false // Permite que os toques passem para os apps abaixo
-            }
-
-            setOnApplyWindowInsetsListener { _, insets ->
-                Log.d("FullscreenService", "Interceptando insets, reativando tela cheia")
-                applyFullscreenMode(this)
-                insets
+                false // Permite que os eventos de toque passem para a tela abaixo
             }
         }
 
@@ -55,66 +63,60 @@ class FullscreenService : Service() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             else
-                WindowManager.LayoutParams.TYPE_PHONE,
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, // Isso garante que os toques passem para o fundo
             PixelFormat.TRANSLUCENT
-        )
-
-        layoutParams.gravity = Gravity.TOP or Gravity.START
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+        }
 
         try {
             windowManager.addView(overlayView, layoutParams)
-            Log.d("FullscreenService", "Overlay adicionado com sucesso")
-
-            Handler(Looper.getMainLooper()).postDelayed({
-                applyFullscreenMode(overlayView!!)
-            }, 500)
+            Log.d(TAG, "Overlay adicionada com sucesso")
         } catch (e: Exception) {
-            Log.e("FullscreenService", "Erro ao adicionar overlay: ${e.message}")
+            Log.e(TAG, "Erro ao adicionar overlay: ${e.message}")
+            stopSelf()
         }
-
-        return START_STICKY
     }
 
-    private fun applyFullscreenMode(view: View) {
-        Log.d("FullscreenService", "Aplicando modo tela cheia")
+    private fun sendTouchBroadcast(x: Float, y: Float) {
+        val intent = Intent("TOUCH_EVENT")
+        intent.putExtra("X", x)
+        intent.putExtra("Y", y)
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+        Log.d(TAG, "Toque detectado na posição: ($x, $y)")
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            view.post {
-                val controller = view.windowInsetsController
-                if (controller != null) {
-                    controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+    private fun createNotification(): Notification {
+        val channelId = "fullscreen_service"
 
-                    // Permite exibir a barra de status ao deslizar, mas mantém a interação na tela toda
-                    controller.systemBarsBehavior =
-                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-
-                    Log.d("FullscreenService", "Modo tela cheia ativado e interativo")
-                } else {
-                    Log.e("FullscreenService", "WindowInsetsController é nulo, falha ao ocultar status bars")
-                }
-            }
+        // ✅ Criar o canal APENAS se a versão do Android for 8.0 (API 26) ou superior
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Fullscreen Service",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
         }
+
+        return NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Fullscreen Mode Ativo")
+            .setSmallIcon(R.drawable.ic_launcher_foreground) // Ajuste o ícone conforme necessário
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
     }
 
     override fun onDestroy() {
-        Log.d("FullscreenService", "Destruindo serviço de Tela Cheia")
-
+        super.onDestroy()
         overlayView?.let {
-            try {
-                windowManager.removeView(it)
-                Log.d("FullscreenService", "Overlay removido com sucesso")
-            } catch (e: Exception) {
-                Log.e("FullscreenService", "Erro ao remover overlay: ${e.message}")
-            }
+            windowManager.removeView(it)
             overlayView = null
         }
-
-        super.onDestroy()
+        Log.d(TAG, "Overlay removida e serviço destruído")
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 }
-

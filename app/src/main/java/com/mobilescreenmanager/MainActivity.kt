@@ -21,7 +21,6 @@ import com.mobilescreenmanager.services.FullscreenService
 import com.mobilescreenmanager.services.ScreenManagerService
 import com.mobilescreenmanager.services.ScreenOrientationService
 import com.mobilescreenmanager.ui.SettingsActivity
-import com.mobilescreenmanager.R
 
 class MainActivity : AppCompatActivity() {
 
@@ -52,8 +51,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
-
         btnSettings.setOnClickListener {
             Log.d("MainActivity", "Botão Configurações clicado")
             try {
@@ -71,6 +68,11 @@ class MainActivity : AppCompatActivity() {
                 startScreenService(ScreenManagerService::class.java, "Gerenciamento de tela iniciado!")
             }
         }
+    }
+    private fun requestAccessibilityPermission() {
+        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        startActivity(intent)
+        Toast.makeText(this, "Ative o serviço de acessibilidade para permitir sobreposições!", Toast.LENGTH_LONG).show()
     }
 
     private fun requestPermissions() {
@@ -132,7 +134,12 @@ class MainActivity : AppCompatActivity() {
     private fun <T> startScreenService(serviceClass: Class<T>, successMessage: String) {
         try {
             if (!isServiceRunning(serviceClass)) {
-                startService(Intent(this, serviceClass))
+                val intent = Intent(this, serviceClass)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
                 showAlert(successMessage)
                 Log.d("MainActivity", "$successMessage iniciado com sucesso")
             } else {
