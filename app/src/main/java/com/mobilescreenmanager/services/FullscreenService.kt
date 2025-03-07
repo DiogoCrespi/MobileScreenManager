@@ -1,8 +1,7 @@
 package com.mobilescreenmanager.services
 
 import android.app.*
-import android.content.Context
-import android.content.Intent
+import android.content.*
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.Build
@@ -12,17 +11,19 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
-import com.mobilescreenmanager.R
 import com.mobilescreenmanager.MainActivity
+import com.mobilescreenmanager.R
 
 class FullscreenService : Service() {
 
     private var windowManager: WindowManager? = null
     private var overlayView: View? = null
+    private val channelId = "fullscreen_service"
+    private val notificationId = 1
 
     override fun onCreate() {
         super.onCreate()
-        startForegroundService()
+        startForegroundServiceWithNotification()
         createOverlay()
     }
 
@@ -33,36 +34,43 @@ class FullscreenService : Service() {
         removeOverlay()
     }
 
-    private fun startForegroundService() {
-        val channelId = "fullscreen_service"
-        val channelName = "Fullscreen Service"
+    private fun startForegroundServiceWithNotification() {
+        createNotificationChannel()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId, channelName, NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Notificação para manter a tela cheia ativa"
-            }
-
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
+        val toggleIntent = Intent(this, FullscreenReceiver::class.java).apply {
+            action = "TOGGLE_FULLSCREEN"
         }
+        val togglePendingIntent = PendingIntent.getBroadcast(
+            this, 0, toggleIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
+        val mainPendingIntent = PendingIntent.getActivity(
             this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Modo Tela Cheia Ativado")
-            .setContentText("Toque para abrir o app")
+            .setContentTitle("Modo Tela Cheia")
+            .setContentText("Clique para ativar ou desativar")
             .setSmallIcon(R.drawable.ic_notification)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(true)
-            .setContentIntent(pendingIntent)
+            .setContentIntent(mainPendingIntent)
+            .addAction(R.drawable.ic_toggle, "Ativar/Desativar Tela Cheia", togglePendingIntent)
             .build()
 
-        startForeground(1, notification)
+        startForeground(notificationId, notification)
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId, "Fullscreen Service", NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Notificação para manter a tela cheia ativa"
+            }
+            getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
+        }
     }
 
     private fun createOverlay() {
