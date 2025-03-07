@@ -69,11 +69,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    private fun requestAccessibilityPermission() {
-        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-        startActivity(intent)
-        Toast.makeText(this, "Ative o serviço de acessibilidade para permitir sobreposições!", Toast.LENGTH_LONG).show()
-    }
 
     private fun requestPermissions() {
         try {
@@ -135,11 +130,15 @@ class MainActivity : AppCompatActivity() {
         try {
             if (!isServiceRunning(serviceClass)) {
                 val intent = Intent(this, serviceClass)
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    startForegroundService(intent)
+                    Log.d("MainActivity", "Iniciando serviço com startForegroundService: ${serviceClass.simpleName}")
+                    startForegroundService(intent) // **Modo Foreground para Android 8+**
                 } else {
+                    Log.d("MainActivity", "Iniciando serviço com startService: ${serviceClass.simpleName}")
                     startService(intent)
                 }
+
                 showAlert(successMessage)
                 Log.d("MainActivity", "$successMessage iniciado com sucesso")
             } else {
@@ -151,17 +150,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun <T> isServiceRunning(serviceClass: Class<T>): Boolean {
-        val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
-            if (serviceClass.name == service.service.className) {
-                return true
+
+        // **Verificando se o serviço está em execução corretamente**
+        private fun <T> isServiceRunning(serviceClass: Class<T>): Boolean {
+            val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                manager.runningAppProcesses?.any { it.processName == packageName } == true
+            } else {
+                @Suppress("DEPRECATION")
+                manager.getRunningServices(Int.MAX_VALUE).any { serviceClass.name == it.service.className }
             }
         }
-        return false
-    }
 
-    companion object {
+
+        companion object {
         private const val REQUEST_CODE_OVERLAY = 1001
     }
 }
