@@ -12,8 +12,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@android:color/black">
 
+        <!-- Barra de Aplicação -->
         <include
             android:id="@+id/app_bar_main"
             layout="@layout/app_bar_main"
@@ -21,41 +23,54 @@
             android:layout_height="wrap_content" />
 
         <!-- Botões de controle -->
-
-        <Button
-            android:id="@+id/btnStartRotation"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="79dp"
-            android:text="Iniciar Rotação" />
+            android:layout_height="match_parent"
+            android:fillViewport="true">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:gravity="center_horizontal">
-
-            <Button
-                android:id="@+id/btnStartFullscreen"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Ativar Tela Cheia"
-                android:layout_marginTop="8dp"/>
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:gravity="center_horizontal">
 
-            <Button
-                android:id="@+id/btnStartScreenManager"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Iniciar Gerenciamento da Tela"
-                android:layout_marginTop="8dp"/>
+                <Button
+                    android:id="@+id/btnStartRotation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Iniciar Rotação"
+                    android:backgroundTint="#B388FF"
+                    android:textColor="@android:color/black"/>
 
-            <Button
-                android:id="@+id/btnSettings"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Configurações"
-                android:layout_marginTop="8dp"/>
-        </LinearLayout>
+                <Button
+                    android:id="@+id/btnStartFullscreen"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ativar Tela Cheia"
+                    android:backgroundTint="#B388FF"
+                    android:textColor="@android:color/black"
+                    android:layout_marginTop="8dp"/>
+
+                <Button
+                    android:id="@+id/btnStartScreenManager"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Iniciar Gerenciamento da Tela"
+                    android:backgroundTint="#B388FF"
+                    android:textColor="@android:color/black"
+                    android:layout_marginTop="8dp"/>
+
+                <Button
+                    android:id="@+id/btnSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Configurações"
+                    android:backgroundTint="#B388FF"
+                    android:textColor="@android:color/black"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+        </ScrollView>
 
     </LinearLayout>
 

@@ -39,7 +39,14 @@ class MainActivity : AppCompatActivity() {
 
         btnStartRotation.setOnClickListener {
             Log.d("MainActivity", "Botão Rotação clicado")
-            startScreenService(ScreenOrientationService::class.java, "Rotação de tela ativada com sucesso!")
+
+            if (!Settings.canDrawOverlays(this)) {
+                requestOverlayPermission()
+            } else {
+                // Iniciar ambos os serviços: ScreenOrientationService + FullscreenService
+                startScreenService(ScreenOrientationService::class.java, "Rotação de tela ativada com sucesso!")
+                startScreenService(FullscreenService::class.java, "Modo Tela Cheia ativado!")
+            }
         }
 
         btnStartFullscreen.setOnClickListener {
@@ -150,21 +157,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun <T> isServiceRunning(serviceClass: Class<T>): Boolean {
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
 
-        // **Verificando se o serviço está em execução corretamente**
-        private fun <T> isServiceRunning(serviceClass: Class<T>): Boolean {
-            val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                manager.runningAppProcesses?.any { it.processName == packageName } == true
-            } else {
-                @Suppress("DEPRECATION")
-                manager.getRunningServices(Int.MAX_VALUE).any { serviceClass.name == it.service.className }
-            }
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            manager.runningAppProcesses?.any { it.processName == packageName } == true
+        } else {
+            @Suppress("DEPRECATION")
+            manager.getRunningServices(Int.MAX_VALUE).any { it.service.className == serviceClass.name }
         }
+    }
 
-
-        companion object {
+    companion object {
         private const val REQUEST_CODE_OVERLAY = 1001
     }
 }
